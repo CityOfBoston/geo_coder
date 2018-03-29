@@ -1,7 +1,6 @@
 import unittest
-from unittest.mock import Mock
 import pandas as pd
-from cob_arcgis_geocoder.geocode import helloWorld, CobArcGISGeocoder
+from cob_arcgis_geocoder.geocode import CobArcGISGeocoder
 
 # test able to initiate class
 class TestInitiatingGeocoderClass(unittest.TestCase):
@@ -13,9 +12,6 @@ class TestInitiatingGeocoderClass(unittest.TestCase):
     def test_can_correctly_create_geocoder_class(self):
         self.assertIsInstance(self.geocoder, CobArcGISGeocoder)
 
-    def test_address_field_is_string(self):
-        self.assertIsInstance(self.geocoder.address_field, str)
-
 class TestAlbleToCleanDf(unittest.TestCase):
     def setUp(self):
         self.df = pd.DataFrame({"id": [1, 2], "address": ["89 Orleans Street Boston MA, 02128", " "]})
@@ -26,11 +22,6 @@ class TestAlbleToCleanDf(unittest.TestCase):
     # test able to update df with new fields 
     def test_address_fields_addedd(self):
         self.assertIn("matched_address", list(self.clean_df))
-    
-    # test able to convert empty strings to NaN
-    def test_empty_strings_converted_to_None(self):
-  # self.assertEqual(math.isnan(self.clean_df.loc[:,"address"][1]), math.isnan(np.NaN))
-        self.assertEqual(self.clean_df.loc[:,"address"][1], None)
 
 # test about to find address cadidates
 class TestAbleToFindAddressCandidates(unittest.TestCase):
@@ -43,7 +34,7 @@ class TestAbleToFindAddressCandidates(unittest.TestCase):
     def test_parameters_are_as_expected(self):
         self.assertEqual(len(self.candidates["candidates"]), 6)
 
-# PICKING ADDRESS CANDIDATES TESTS
+# Picking Address Candidate Tests
 # test able to return correct PointAddress when available
 class TestAbleToCorrectlyPickPointAddressCandidate(unittest.TestCase):
     def setUp(self):
@@ -59,19 +50,6 @@ class TestAbleToCorrectlyPickPointAddressCandidate(unittest.TestCase):
     def test_picks_expected_candidate(self):
         self.assertEqual(self.picked_candidate["attributes.Ref_ID"], 105967)
 
-# test appriopriately calls the reverse geocode function when no PointAddresses
-class TestAbleToCallReverseGeocode(unittest.TestCase):
-    def setUp(self):
-        self.df = pd.DataFrame({"id": [1], "address": ["890 Commonwealth Avenue"]})
-        self.address_to_geocode = self.df["address"][0]
-        self.geocoder = CobArcGISGeocoder(self.df, self.address_to_geocode)
-        self.candidates = self.geocoder.find_address_candidates(self.address_to_geocode)
-    
-    def test_calls_reverse_geocode_function(self):
-        self.geocoder.reverse_geocode = Mock()
-        self.geocoder.pick_address_candidate(self.candidates)
-        self.geocoder.reverse_geocode.assert_called()
-
 # test returns None when there are no candidates returned from ESRI API
 class TestReturnsNoneWhenNoCandidates(unittest.TestCase):
     def setUp(self):
@@ -84,24 +62,9 @@ class TestReturnsNoneWhenNoCandidates(unittest.TestCase):
     def test_returns_none_when_no_candidates(self):
         self.assertEqual(self.picked_candidate, None)
 
-# REVERSE GEOCODE TESTS
-
-# test calls correct functions
-class TestReverseGeocodeCallsFindAddressCandidates(unittest.TestCase):
-    def setUp(self):
-        self.df = pd.DataFrame({"id": [1], "address": ["890 Commonwealth Avenue"]})
-        self.address_to_geocode = self.df["address"][0]
-        self.geocoder = CobArcGISGeocoder(self.df, self.address_to_geocode)
-        self.candidates = self.geocoder.find_address_candidates(self.address_to_geocode)
-        self.picked_candidate = self.geocoder.pick_address_candidate(self.candidates)
-
-    def test_calls_reverse_geocode_function(self):
-        self.geocoder.reverse_geocode = Mock()
-        self.geocoder.pick_address_candidate(self.candidates)
-        self.geocoder.reverse_geocode.assert_called()
-
+# Reverse Geocode Tests
 # test returns expected results when finds a point address
-class TestReverseGeocodeReturnsExpectedResultsWhenFindsPoint(unittest.TestCase):
+class TestReverseGeocodeFindsPoint(unittest.TestCase):
     def setUp(self):
         self.df = pd.DataFrame({"id": [1], "address": ["890 Commonwealth Avenue"]})
         self.address_to_geocode = self.df["address"][0]
@@ -112,21 +75,47 @@ class TestReverseGeocodeReturnsExpectedResultsWhenFindsPoint(unittest.TestCase):
     def test_returns_point_address(self):
         self.assertEqual(self.picked_candidate["attributes.Ref_ID"], 41280)
     
-    def test_returns_correct_flag_no_point_addresses(self):
+    def test_returns_correct_flag_point_addresses(self):
         self.assertEqual(self.picked_candidate["flag"], "Able to reverse-geocode to a point address.")
-        
 
+# Geocoding Logic Tests
+class TestAbleToHandleNullAddresses(unittest.TestCase):
+    def setUp(self):
+        self.df = pd.DataFrame({"id": [1, 2], "address": ["89 Orleans Street Boston MA, 02128", None]})
+        self.address = "address"
+        self.geocoder = CobArcGISGeocoder(self.df, self.address)
+        self.geocode_df_with_Nulls = self.geocoder.geocode_df(df=self.df, address_field=self.address)
 
+    def test_handle_null_address(self):
+        self.assertEqual(self.geocode_df_with_Nulls.loc[:,"flag"][1], "No address provided. Unable to geocode.")
 
+class TestAbleToFindPointAddress(unittest.TestCase):
+    def setUp(self):
+        self.df = pd.DataFrame({"id": [1], "address": ["1 City Hall Plz, Boston, 02108"]})
+        self.address = "address"
+        self.geocoder = CobArcGISGeocoder(self.df, self.address)
+        self.geocode_df = self.geocoder.geocode_df(df=self.df, address_field=self.address)
+    
+    def test_returns_expected_address(self):
+        print(self.geocode_df["SAM_ID"])
+        self.assertEqual(self.geocode_df["SAM_ID"][0], 32856)
 
-# TEST FULL GEOCODE LOGIC
-# test able to handle null addresses
-# class TestAbleToHandleNullAddresses(unittest.TestCase):
-#     def setUp(self):
-#         self.df = pd.DataFrame({"id": [1, 2], "address": ["89 Orleans Street Boston MA, 02128", None]})
-#         self.address = "address"
-#         self.geocoder = CobArcGISGeocoder(self.df, self.address)
-#         self.geocode_df_with_Nulls = self.geocoder.geocode_df(df=self.df, address_field=self.address)
+class TestAbleToReverseGeocodeToPointAddress(unittest.TestCase):
+    def setUp(self):
+        self.df = pd.DataFrame({"id": [1], "address": ["890 Commonwealth Avenue"]})
+        self.address = "address"
+        self.geocoder = CobArcGISGeocoder(self.df, self.address)
+        self.geocode_df = self.geocoder.geocode_df(df=self.df, address_field=self.address)
 
-#     def test_handle_null_address(self):
-#         self.assertEqual(self.geocode_df_with_Nulls.loc[:,"flag"][1], "No address provided in this field. Unable to geocode.")
+    def test_reverse_geocode_to_point_address(self):
+        self.assertEqual(self.geocode_df["SAM_ID"][0], 41280)
+
+class TestHandlesNotFindingAddressAsExpected(unittest.TestCase):
+    def setUp(self):
+        self.df = pd.DataFrame({"id": [1], "address": ["This isn't an address."]})
+        self.address = "address"
+        self.geocoder = CobArcGISGeocoder(self.df, self.address)
+        self.geocode_df = self.geocoder.geocode_df(df=self.df, address_field=self.address)
+
+    def test_reverse_geocode_to_point_address(self):
+        self.assertEqual(self.geocode_df["flag"][0], "Unable to geocode to any address.")
