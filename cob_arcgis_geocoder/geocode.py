@@ -11,22 +11,21 @@ class CobArcGISGeocoder(object):
         self.df = df 
         self.address_field = address_field
 
-    @classmethod
-    def geocode_df(self, df, address_field):
-
+    def geocode_df(self):
+        
         # add columns for geocoded address information
-        df = pd.concat([df,pd.DataFrame(columns=list(["matched_address", "matched_address_score", "SAM_ID", "location_x", "location_y", "flag", "reverse_geocode_address"]))])
+        df = pd.concat([self.df,pd.DataFrame(columns=list(["matched_address", "matched_address_score", "SAM_ID", "location_x", "location_y", "flag", "reverse_geocode_address"]))])
         
         # interate through each row and geocode the address
         for index, row in df.iterrows():
             
-            if row[address_field] is None: 
+            if row[self.address_field] is None: 
                 # if address field is empty, add flag to row
                 df.at[index, "flag"] = "No address provided. Unable to geocode."
             else: 
                 # if address field isn't empty, try geocoding:
                 # 1. find the address candidates
-                candidates = self._find_address_candidates(SingleLine=row[address_field])
+                candidates = self._find_address_candidates(SingleLine=row[self.address_field])
                 # 2. pick the from the list of candidates
                 matched_address_df = self._pick_address_candidate(candidates)  
 
