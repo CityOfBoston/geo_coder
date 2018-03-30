@@ -12,16 +12,6 @@ class TestInitiatingGeocoderClass(unittest.TestCase):
     def test_can_correctly_create_geocoder_class(self):
         self.assertIsInstance(self.geocoder, CobArcGISGeocoder)
 
-class TestAlbleToCleanDf(unittest.TestCase):
-    def setUp(self):
-        self.df = pd.DataFrame({"id": [1, 2], "address": ["89 Orleans Street Boston MA, 02128", " "]})
-        self.address = "address"
-        self.geocoder = CobArcGISGeocoder(self.df, self.address)
-        self.clean_df = self.geocoder.clean_df(df=self.df, address_field=self.address)
-    
-    # test able to update df with new fields 
-    def test_address_fields_addedd(self):
-        self.assertIn("matched_address", list(self.clean_df))
 
 # test about to find address cadidates
 class TestAbleToFindAddressCandidates(unittest.TestCase):
@@ -29,7 +19,7 @@ class TestAbleToFindAddressCandidates(unittest.TestCase):
         self.df = pd.DataFrame({"id": [1], "address": ["89 Orleans Street Boston MA, 02128"]})
         self.address_to_geocode = self.df["address"][0]
         self.geocoder = CobArcGISGeocoder(self.df, self.address_to_geocode)
-        self.candidates = self.geocoder.find_address_candidates(self.address_to_geocode)
+        self.candidates = self.geocoder._find_address_candidates(self.address_to_geocode)
 
     def test_parameters_are_as_expected(self):
         self.assertEqual(len(self.candidates["candidates"]), 6)
@@ -41,8 +31,8 @@ class TestAbleToCorrectlyPickPointAddressCandidate(unittest.TestCase):
         self.df = pd.DataFrame({"id": [1], "address": ["89 Orleans Street Boston MA, 02128"]})
         self.address_to_geocode = self.df["address"][0]
         self.geocoder = CobArcGISGeocoder(self.df, self.address_to_geocode)
-        self.candidates = self.geocoder.find_address_candidates(self.address_to_geocode)
-        self.picked_candidate = self.geocoder.pick_address_candidate(self.candidates)
+        self.candidates = self.geocoder._find_address_candidates(self.address_to_geocode)
+        self.picked_candidate = self.geocoder._pick_address_candidate(self.candidates)
     
     def test_picks_highest_score_candidate(self):
         self.assertEqual(self.picked_candidate["score"], 94.57)
@@ -56,8 +46,8 @@ class TestReturnsNoneWhenNoCandidates(unittest.TestCase):
         self.df = pd.DataFrame({"id": [1], "address": ["This isn't an address"]})
         self.address_to_geocode = self.df["address"][0]
         self.geocoder = CobArcGISGeocoder(self.df, self.address_to_geocode)
-        self.candidates = self.geocoder.find_address_candidates(self.address_to_geocode)
-        self.picked_candidate = self.geocoder.pick_address_candidate(self.candidates)
+        self.candidates = self.geocoder._find_address_candidates(self.address_to_geocode)
+        self.picked_candidate = self.geocoder._pick_address_candidate(self.candidates)
 
     def test_returns_none_when_no_candidates(self):
         self.assertEqual(self.picked_candidate, None)
@@ -69,8 +59,8 @@ class TestReverseGeocodeFindsPoint(unittest.TestCase):
         self.df = pd.DataFrame({"id": [1], "address": ["890 Commonwealth Avenue"]})
         self.address_to_geocode = self.df["address"][0]
         self.geocoder = CobArcGISGeocoder(self.df, self.address_to_geocode)
-        self.candidates = self.geocoder.find_address_candidates(self.address_to_geocode)
-        self.picked_candidate = self.geocoder.pick_address_candidate(self.candidates)
+        self.candidates = self.geocoder._find_address_candidates(self.address_to_geocode)
+        self.picked_candidate = self.geocoder._pick_address_candidate(self.candidates)
 
     def test_returns_point_address(self):
         self.assertEqual(self.picked_candidate["attributes.Ref_ID"], 41280)
