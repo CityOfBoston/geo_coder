@@ -94,14 +94,14 @@ class CobArcGISGeocoder(object):
 
         if len(candidates["candidates"]) >= 1:
 
-            # if there is more than 0 candidates, put all the them into a dataframe
+            # if there is at least 1 candidate, put the results into a dataframe
             addresses_df = json_normalize(candidates["candidates"])
 
             # Locators prefixed with "SAM_" indicate the addresses returned have a SAM ID so we filter the dataframe for those
             addresses_df_SAM = addresses_df.loc[addresses_df["attributes.Loc_name"].isin(locators)]
 
             if len(addresses_df_SAM.index) == 0:
-                print("there were {} non-SAM address candidates".format(len(addresses_df_SAM.index)))
+                print("there were {} SAM address candidates".format(len(addresses_df_SAM.index)))
 
                 # if there are no SAM addresses, try to reverse geocode the highest scored candidate
                 matched_address_df = self._reverse_geocode(addresses_df, locators)
@@ -134,12 +134,13 @@ class CobArcGISGeocoder(object):
             dataframe: Dataframe containing reverse-geocoded addresses.
         """
 
-        # sort the candidates by score, use the highest one to geocode
-        address_to_geocode = address_df.sort_values(by="score", ascending=False).iloc[0]
-        
+        # sort the candidates by score, use the highest one to reverse geocode
+        address_to_reverse_geocode = address_df.sort_values(by="score", ascending=False).iloc[0]
+        print("address_to_reverse_geocode:\n{}".format(address_to_reverse_geocode))
+
         # get its location - **must be in ESPG 3857**
-        location_x = address_to_geocode[["attributes.DisplayX"]][0]
-        location_y = address_to_geocode[["attributes.DisplayY"]][0]
+        location_x = address_to_reverse_geocode[["attributes.DisplayX"]][0] 
+        location_y = address_to_reverse_geocode[["attributes.DisplayY"]][0] 
         
         # feed the x,y to the reverse geocoder
         reverse_geocode_url = "https://awsgeo.boston.gov/arcgis/rest/services/Locators/Boston_Composite_Prod/GeocodeServer/reverseGeocode?location={}%2C+{}&distance=&outSR=4326&returnIntersection=false&f=json".format(location_x,location_y) 
@@ -148,8 +149,17 @@ class CobArcGISGeocoder(object):
             data = url.read().decode("utf-8")
             new_address_data = json.loads(data)
         
+        # If there was no address match return none, otherwise use the address matched
+        for key in new_address_data:
+            if key == "error":
+                print("Error:\n{}".format(new_address_data))
+                return None
+            elif key == "address":
+                new_address = new_address_data["address"]["Match_addr"]
+            else:
+                return None
+        
         # reverse geocode returns an address that needs to be geocoded again
-        new_address = new_address_data["address"]["Match_addr"]
         print("using this address: {} to reverse geocode.".format(new_address))
 
         # find the address candidates for the new address
@@ -161,7 +171,7 @@ class CobArcGISGeocoder(object):
 
         if len(addresses_df_SAM.index) == 0: 
             # if there where no SAM addresses returned, add the highest-scored non-SAM address found in the initial attempt to geocode
-            print("there were {} non-SAM address candidates only for the reverse geocode. Adding non-SAM address".format(len(addresses_df_SAM.index)))
+            print("there were {} SAM address candidates only for the reverse geocode. Adding non-SAM address".format(len(addresses_df_SAM.index)))
             matched_address_df = addresses_df[["address", "score", "attributes.Ref_ID", "location.x", "location.y"]].sort_values(by="score", ascending=False).iloc[0]
 
             # add flag to dataframe and return it
