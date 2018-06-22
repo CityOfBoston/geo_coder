@@ -43,7 +43,10 @@ class CobArcGISGeocoder(object):
                 else:
                     # if unable to find an address to geocode to, flag the row in the dataframe
                     # TODO: write this row to a table in postgres so we can log failures
-                    df.at[index, "flag"] = "Unable to geocode to any address."      
+                    df.at[index, "flag"] = "Unable to geocode to any address."
+                    # Set lat/long to 0 if unable to geocode
+                    df.at[index, "location_x"] = 0.00
+                    df.at[index, "location_y"] = 0.00      
 
         # return the updated dataframe when the rows have been iterated through
         return df
