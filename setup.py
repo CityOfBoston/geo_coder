@@ -6,7 +6,7 @@ def readme():
 
 
 setup(name='cob_arcgis_geocoder',
-      version='0.0.1',
+      version='0.0.2',
       description='Python geocoder to be used in ETL pipelines',
       url='later',
       author='many',
