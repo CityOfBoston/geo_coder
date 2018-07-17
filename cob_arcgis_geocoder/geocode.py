@@ -148,6 +148,7 @@ class CobArcGISGeocoder(object):
         
         # If environment variables don't exist, continue to run without archiving data
         except:
+            print("Environment variables not found.")
             return
 
         config_params = dict()
