@@ -112,7 +112,7 @@ class CobArcGISGeocoder(object):
             addresses_df = json_normalize(candidates["candidates"])
 
             # Locators prefixed with "SAM_" indicate the addresses returned have a SAM ID so we filter the dataframe for those
-            addresses_df_SAM = addresses_df.loc[addresses_df["attributes.Loc_name"].isin(locators)]
+            addresses_df_SAM = addresses_df[addresses_df["attributes.Loc_name"].isin(locators)].copy()
 
             if len(addresses_df_SAM.index) == 0:
                 print("there were {} SAM address candidates".format(len(addresses_df_SAM.index)))
