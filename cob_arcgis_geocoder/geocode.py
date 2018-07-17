@@ -11,7 +11,6 @@ import sys
 from datetime import datetime
 
 class CobArcGISGeocoder(object):
-    # TODO: write failed addresses to a table
 
     def __init__(self, df, address_field):
         # initiate dataframe with new columns to be populated
@@ -56,7 +55,6 @@ class CobArcGISGeocoder(object):
                     # Set lat/long to 0 if unable to geocode
                     df.at[index, "location_x"] = 0.00
                     df.at[index, "location_y"] = 0.00      
-                    # TODO: write this row to a table in postgres so we can log failures
                     self._archive_non_sam_address(row[self.address_field], "Unable to geocode")
 
         # return the updated dataframe when the rows have been iterated through
@@ -118,15 +116,14 @@ class CobArcGISGeocoder(object):
                 print("there were {} SAM address candidates".format(len(addresses_df_SAM.index)))
 
                 # if there are no SAM addresses, return the highest scored locator
-                matched_address_df = addresses_df[["address", "score", "attributes.Ref_ID", "location.x", "location.y, attributes.Loc_Name"]].sort_values(by="score", ascending=False).iloc[0]
+                matched_address_df = addresses_df["address", "score", "attributes.Ref_ID", "location.x", "location.y, attributes.Loc_name"].sort_values(by="score", ascending=False).iloc[0]
                 matched_address_df["flag"] = "Able to geocode to a non-SAM address."
                 return matched_address_df
             
             else:
                 print("there are {} SAM addresses".format(len(addresses_df_SAM.index)))
-                print(addresses_df_SAM)
                 # sort values by score and pick the highest one to return - **Ref_ID is the SAM ID**
-                matched_address_df = addresses_df_SAM[["address", "score", "attributes.Ref_ID", "location.x", "location.y, attributes.Loc_Name"]].sort_values(by="score", ascending=False).iloc[0]
+                matched_address_df = addresses_df_SAM["address", "score", "attributes.Ref_ID", "location.x", "location.y, attributes.Loc_name"].sort_values(by="score", ascending=False).iloc[0]
                 
                 # add flag to dataframe and return it
                 matched_address_df["flag"] = "Able to geocode to a SAM address."
