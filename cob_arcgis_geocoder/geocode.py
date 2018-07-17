@@ -124,7 +124,7 @@ class CobArcGISGeocoder(object):
             
             else:
                 print("there are {} SAM addresses".format(len(addresses_df_SAM.index)))
-
+                print(addresses_df_SAM)
                 # sort values by score and pick the highest one to return - **Ref_ID is the SAM ID**
                 matched_address_df = addresses_df_SAM[["address", "score", "attributes.Ref_ID", "location.x", "location.y, attributes.Loc_Name"]].sort_values(by="score", ascending=False).iloc[0]
                 
