@@ -39,7 +39,7 @@ class CobArcGISGeocoder(object):
                 # 2. pick the from the list of candidates
                 matched_address_df = self._pick_address_candidate(candidates, SAM_Locators)  
 
-                if matched_address_df is not None: 
+                if matched_address_df is not None and matched_address_df[["flag"]][0] == "Able to geocode to a SAM address.": 
                     # if able to pick an address, update the row in the dataframe with the geocoded address information
                     df.at[index, "matched_address"] = matched_address_df[["address"]][0]
                     df.at[index, "matched_address_score"] = matched_address_df[["score"]][0]
@@ -48,7 +48,7 @@ class CobArcGISGeocoder(object):
                     df.at[index, "location_y"] = matched_address_df[["location.y"]][0]
                     df.at[index, "flag"] = matched_address_df[["flag"]][0]
                     df.at[index, "locator_name"] = matched_address_df[["attributes.Loc_name"]][0]
-                elif matched_address_df[["flag"]][0] == "Able to geocode to a non-SAM address.":
+                elif matched_address_df is not None and matched_address_df[["flag"]][0] == "Able to geocode to a non-SAM address.":
                     self._archive_non_sam_address(df.at[index], "Non-SAM address")
                 else:
                     # if unable to find an address to geocode to, flag the row in the dataframe
