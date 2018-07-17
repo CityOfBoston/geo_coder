@@ -49,7 +49,7 @@ class CobArcGISGeocoder(object):
                     df.at[index, "flag"] = matched_address_df[["flag"]][0]
                     df.at[index, "locator_name"] = matched_address_df[["attributes.Loc_name"]][0]
                 elif matched_address_df is not None and matched_address_df[["flag"]][0] == "Able to geocode to a non-SAM address.":
-                    self._archive_non_sam_address(matched_address_df[["address"]][0], "Non-SAM address")
+                    self._archive_non_sam_address(row[self.address_field], "Non-SAM address")
                 else:
                     # if unable to find an address to geocode to, flag the row in the dataframe
                     df.at[index, "flag"] = "Unable to geocode to any address."
@@ -57,7 +57,7 @@ class CobArcGISGeocoder(object):
                     df.at[index, "location_x"] = 0.00
                     df.at[index, "location_y"] = 0.00      
                     # TODO: write this row to a table in postgres so we can log failures
-                    self._archive_non_sam_address(matched_address_df[["address"]][0], "Unable to geocode")
+                    self._archive_non_sam_address(row[self.address_field], "Unable to geocode")
 
         # return the updated dataframe when the rows have been iterated through
         return df
