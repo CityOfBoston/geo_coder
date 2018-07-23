@@ -48,14 +48,20 @@ class CobArcGISGeocoder(object):
                     df.at[index, "flag"] = matched_address_df[["flag"]][0]
                     df.at[index, "locator_name"] = matched_address_df[["attributes.Loc_name"]][0]
                 elif matched_address_df is not None and matched_address_df[["flag"]][0] == "Able to geocode to a non-SAM address.":
-                    self._archive_non_sam_address(row[self.address_field], "Non-SAM address")
+                    df.at[index, "matched_address"] = matched_address_df[["address"]][0]
+                    df.at[index, "matched_address_score"] = matched_address_df[["score"]][0]
+                    df.at[index, "location_x"] = matched_address_df[["location.x"]][0]
+                    df.at[index, "location_y"] = matched_address_df[["location.y"]][0]
+                    df.at[index, "flag"] = matched_address_df[["flag"]][0]
+                    df.at[index, "locator_name"] = matched_address_df[["attributes.Loc_name"]][0]
+                    self._archive_non_sam_address(row[self.address_field], matched_address_df[["address"]][0])
                 else:
                     # if unable to find an address to geocode to, flag the row in the dataframe
                     df.at[index, "flag"] = "Unable to geocode to any address."
                     # Set lat/long to 0 if unable to geocode
                     df.at[index, "location_x"] = 0.00
                     df.at[index, "location_y"] = 0.00      
-                    self._archive_non_sam_address(row[self.address_field], "Unable to geocode")
+                    self._archive_non_sam_address(row[self.address_field], None)
 
         # return the updated dataframe when the rows have been iterated through
         return df
@@ -97,7 +103,7 @@ class CobArcGISGeocoder(object):
 
         Args:
             candidates (:obj:`dataframe`): Dataframe of address candidates.
-            locators (:obj:`list`): List of locators.
+            locators (:obj:`list`): List of locators to filter by.
 
         Returns:
             dataframe: Dataframe with the best potential match if one is available.
@@ -134,7 +140,7 @@ class CobArcGISGeocoder(object):
             return None
     
     @classmethod
-    def _archive_non_sam_address(self, address, source):
+    def _archive_non_sam_address(self, address, returned_result):
         """Uploads to a postgres table to keep track of addresses that need to be assigned a SAM ID."""
         try:
             env_var_dict = dict()
@@ -145,7 +151,7 @@ class CobArcGISGeocoder(object):
         
         # If environment variables don't exist, continue to run without archiving data
         except:
-            print("Environment variables not found.")
+            print("Environment variables not found. Continuing...")
             return
 
         config_params = dict()
@@ -158,7 +164,7 @@ class CobArcGISGeocoder(object):
 
         # Write the latest addresses to the table
         try:
-            insert_query = "INSERT INTO {} (address_submitted, source, time_stamp) VALUES ('{}', '{}', '{}')".format(config_params['upload_table_name'], address, source, datetime.now())
+            insert_query = "INSERT INTO {} (address_submitted, returned_result, time_stamp) VALUES ('{}', '{}', '{}')".format(config_params['upload_table_name'], address, returned_result, datetime.now())
             
             print(insert_query)
 
