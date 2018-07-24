@@ -164,7 +164,7 @@ class CobArcGISGeocoder(object):
 
         # Write the latest addresses to the table
         try:
-            # First delete rows where the id already exists
+            # First delete rows where the address already exists
             delete_query = """DELETE FROM {} WHERE address_submitted = '{}'""".format(config_params['upload_table_name'], address)
             print(delete_query)
             cur.execute(delete_query)
