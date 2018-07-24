@@ -164,10 +164,14 @@ class CobArcGISGeocoder(object):
 
         # Write the latest addresses to the table
         try:
-            insert_query = "INSERT INTO {} (address_submitted, returned_result, time_stamp) VALUES ('{}', '{}', '{}')".format(config_params['upload_table_name'], address, returned_result, datetime.now())
-            
-            print(insert_query)
+            # First delete rows where the id already exists
+            delete_query = """DELETE FROM {} WHERE address_submitted = '{}'""".format(config_params['upload_table_name'], address)
+            print(delete_query)
+            cur.execute(delete_query)
+            conn.commit()
 
+            insert_query = "INSERT INTO {} (address_submitted, returned_result, time_stamp) VALUES ('{}', '{}', '{}')".format(config_params['upload_table_name'], address, returned_result, datetime.now())
+            print(insert_query)
             cur.execute(insert_query)
             conn.commit()
 
