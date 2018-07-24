@@ -164,6 +164,10 @@ class CobArcGISGeocoder(object):
 
         # Write the latest addresses to the table
         try:
+            # Escape single quotes in addresses for upcoming insert
+            address = address.replace("'","''")
+            returned_result = returned_result.replace("'","''")
+
             # First delete rows where the id already exists
             delete_query = """DELETE FROM {} WHERE address_submitted = '{}'""".format(config_params['upload_table_name'], address)
             print(delete_query)
