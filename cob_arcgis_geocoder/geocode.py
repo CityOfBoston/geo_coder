@@ -142,17 +142,18 @@ class CobArcGISGeocoder(object):
     @classmethod
     def _archive_non_sam_address(self, address, returned_result):
         """Uploads to a postgres table to keep track of addresses that need to be assigned a SAM ID."""
-        try:
-            env_var_dict = dict()
-            env_var_dict['upload_hostname'] = os.environ.get("POSTGRES_IP")
-            env_var_dict['upload_database_name'] = os.environ.get("POSTGRES_PROD_DB")
-            env_var_dict['upload_database_user'] = os.environ.get("POSTGRES_PROD_USER")
-            env_var_dict['upload_database_pass'] = os.environ.get("POSTGRES_PROD_PASS")
+
+        env_var_dict = dict()
+        env_var_dict['upload_hostname'] = os.environ.get("POSTGRES_IP")
+        env_var_dict['upload_database_name'] = os.environ.get("POSTGRES_PROD_DB")
+        env_var_dict['upload_database_user'] = os.environ.get("POSTGRES_PROD_USER")
+        env_var_dict['upload_database_pass'] = os.environ.get("POSTGRES_PROD_PASS")
         
         # If environment variables don't exist, continue to run without archiving data
-        except:
-            print("Environment variables not found. Continuing...")
-            return
+        for _, v in env_var_dict.items():
+            if v == None:
+                print("Environment variables not found. Continuing...")
+                return
 
         config_params = dict()
         config_params['upload_table_name'] = "internal_data.failed_geocoded_addresses"
