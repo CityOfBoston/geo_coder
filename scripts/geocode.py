@@ -188,7 +188,7 @@ if __name__=="__main__":
         file_path = sys.argv[1]
         address_column = sys.argv[2]
     else:
-        print(r'Please enter a valid csv file path and the name of the address column to geocode. Ex: python geocode.py "C:\Users\CON01599\Desktop\address_list.csv" "address_column"')
+        print(r'Please enter a valid csv file path and the name of the address column to geocode. Ex: python geocode.py "C:\Users\UserName\Desktop\address_list.csv" "address_column"')
         print("File location: {}\nAddress column:{}".format(file_path, address_column))
         sys.exit(1)
 
