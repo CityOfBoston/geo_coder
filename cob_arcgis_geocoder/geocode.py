@@ -148,6 +148,7 @@ class CobArcGISGeocoder(object):
         env_var_dict['upload_database_name'] = os.environ.get("POSTGRES_PROD_DB")
         env_var_dict['upload_database_user'] = os.environ.get("POSTGRES_PROD_USER")
         env_var_dict['upload_database_pass'] = os.environ.get("POSTGRES_PROD_PASS")
+        env_var_dict['upload_database_port'] = os.environ.get("POSTGRES_PROD_PORT")
         
         # If environment variables don't exist, continue to run without archiving data
         for _, v in env_var_dict.items():
@@ -157,10 +158,9 @@ class CobArcGISGeocoder(object):
 
         config_params = dict()
         config_params['upload_table_name'] = "internal_data.failed_geocoded_addresses"
-        config_params['upload_database_port'] = "6666"
+        
 
-
-        conn = psycopg2.connect("dbname='{}' user='{}' host='{}' password='{}' port={}".format(env_var_dict['upload_database_name'], env_var_dict['upload_database_user'], env_var_dict['upload_hostname'], env_var_dict['upload_database_pass'], int(config_params['upload_database_port']) ))
+        conn = psycopg2.connect("dbname='{}' user='{}' host='{}' password='{}' port={}".format(env_var_dict['upload_database_name'], env_var_dict['upload_database_user'], env_var_dict['upload_hostname'], env_var_dict['upload_database_pass'], int(env_var_dict['upload_database_port']) ))
         cur = conn.cursor()
 
         # Write the latest addresses to the table
