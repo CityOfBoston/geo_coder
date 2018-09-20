@@ -196,9 +196,13 @@ if __name__=="__main__":
     
     if os.path.isfile(file_path):
         file_name, file_extension = os.path.splitext(file_path)
-        df = pd.read_csv(filepath_or_buffer=file_path)
+        try:
+            df = pd.read_csv(filepath_or_buffer=file_path, encoding="UTF-8")
+        except UnicodeDecodeError as e:
+            print(str(e), "Trying ANSI encoding...")
+            df = pd.read_csv(filepath_or_buffer=file_path, encoding="ANSI")
     else:
-        print("Please enter a valid csv file path.\nFile path given: {}".format(file_path))
+        print("Please enter a full valid csv file path including .csv.\nFile path given: {}".format(file_path))
         sys.exit(1)
 
     geocoded_df = geocode_df(df, address_column)
