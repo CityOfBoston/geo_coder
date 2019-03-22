@@ -1,6 +1,7 @@
 import unittest
 import pandas as pd
 from cob_arcgis_geocoder.geocode import CobArcGISGeocoder
+from cob_arcgis_geocoder.reverse_geocode import CobArcGISReverseGeocoder
 
 # test able to initiate class
 class TestInitiatingGeocoderClass(unittest.TestCase):
