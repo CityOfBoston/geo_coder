@@ -8,8 +8,7 @@ from pandas.io.json import json_normalize
 
 class CobArcGISReverseGeocoder(object):
 
-    def __init__(self, df, x, y):
-        # da
+    def __init__(self, df, x, y, input_coord_system, output_coord_system, return_intersection):
         self.df = df
         self.x = x
         self.y = y
@@ -29,11 +28,12 @@ class CobArcGISReverseGeocoder(object):
 
             #If either of the coordinates do not exist, set a message to the Address field that is unable to find an address.
             #If both coordinates are present, reverse geocode those coordinates and set them to the dataframe object. 
-            if row[self.x] is None or row[self.y] is None:
+            if row[self.x_field] is None or row[self.y_field] is None:
                 df.at[index, 'Address'] = "Insufficient coordinates given.  Unable to find an address."
             else:
                 #fetch the results from the API
-                apicall_results = self._reverse_geocode(row[self.x], row[self.y], row[self.input_coord_system], row[self.output_coord_system], row[self.return_intersection])
+                apicall_results = self._reverse_geocode(row[self.x], row[self.y], row[self.input_coord_system],
+                 row[self.output_coord_system_field], row[self.return_intersection])
                 #clean those results up, clean columns up
                 address_df = self._parse_address_results(apicall_results)
 
@@ -44,7 +44,7 @@ class CobArcGISReverseGeocoder(object):
                     df.at[index, "Zip"] = address_df[["ZIP"]][0]
                     df.at[index, "matched_x_coord"] = address_df[["x"]][0]
                     df.at[index, "matched_y_coord"] = address_df[["y"]][0]
-                    df.at[index, "output_coord_system"] = address_df[["output_coord_system"]][0]
+                    df.at[index, "output_coord_system"] = address_df[["output_coord_system_field"]][0]
                     df.at[index, "locator_name"] = address_df[["Loc_name"]][0]
                 else:
                     #If the results are an empty set, set Address to None
@@ -62,49 +62,44 @@ class CobArcGISReverseGeocoder(object):
     @classmethod
     #input the coordinate system, defaulted
     def _reverse_geocode(self, x_coord, y_coord, input_coord_system="4326", output_coord_system="4326", return_intersection=False, distance=100, outputType="pjson"):
-    	"""
+        """
         Returns a JSON object of the closest address that is closest to the point given and the 
 
-    	Args: 
+        Args: 
         x (float): the x value in a coordinate pair to be reverse geocoded.
-    	y (float): the y value in a coordinate pair to be reverse geocoded.
+        y (float): the y value in a coordinate pair to be reverse geocoded.
         input_coord_system (str, optional): the spatial reference coordinate system that will be queried.
         Defaults to WGS84 coordinate system.
         output_coord_system (str, optional): spatial reference coordinate for which the returned address will be returned with.
         Defaults to WGS84 coordinate system.
-        return_intersection (Boolean, optional): specifies whether the geocoder will find the closest intersection. 
-        Defaults to False.
-        Feature Types to be removed for this version of the wrapper, to be further investigated
-        #Feature types (str, optional): only will look for point addresses.  Can be changed to find different types of addresses
-        #featureTypes="PointAddress",
+        return_intersection (Boolean, optional): specifies geocoder to return closest intersection. Default is False.
         See https://developers.arcgis.com/rest/geocode/api-reference/geocoding-reverse-geocode.htm
         Distance: (Int, optional) - distnace with which the geocoder will search for an address. defaulted to 100 meters.
         outputType: (str, optional) response format.  Default type is pretty print json.
-        will be returned.
-    	
-		E.G.
-		https://awsgeo.boston.gov/arcgis/rest/services/Locators/Boston_Composite_Prod/GeocodeServer/reverseGeocode?location={"x": -71.053068420958226,"y":42.365768305949707, "spatialReference":{"wkid":4326}}&outSR=4326&distance=100&langCode=&outSR=4326&returnIntersection=false&f=json
-		https://awsgeo.boston.gov/arcgis/rest/services/Locators/Boston_Composite_Prod/GeocodeServer/reverseGeocode?location={"x": 776969.460426,"y":2958642.02359, "spatialReference":{"wkid":3249}}&outSR=4326&distance=100&langCode=&outSR=4326&returnIntersection=false&f=json
-		102686 - 3249
-		http://awsgeo.boston.gov/arcgis/rest/services/Locators/Boston_Composite_Prod/GeocodeServer/reverseGeocode?f=pjson&location={ "x": -71.057128, "y": 42.360032, "spatialReference": { "wkid": 4326}}&outSR=4326
-    	"""
+        
+        E.G.
+        https://awsgeo.boston.gov/arcgis/rest/services/Locators/Boston_Composite_Prod/GeocodeServer/reverseGeocode?location={"x": -71.053068420958226,"y":42.365768305949707, "spatialReference":{"wkid":4326}}&outSR=4326&distance=100&langCode=&outSR=4326&returnIntersection=false&f=json
+        https://awsgeo.boston.gov/arcgis/rest/services/Locators/Boston_Composite_Prod/GeocodeServer/reverseGeocode?location={"x": 776969.460426,"y":2958642.02359, "spatialReference":{"wkid":3249}}&outSR=4326&distance=100&langCode=&outSR=4326&returnIntersection=false&f=json
+        102686 - 3249
+        http://awsgeo.boston.gov/arcgis/rest/services/Locators/Boston_Composite_Prod/GeocodeServer/reverseGeocode?f=pjson&location={ "x": -71.057128, "y": 42.360032, "spatialReference": { "wkid": 4326}}&outSR=4326
+        """
 
-       	json_params = { "location": { 
-    								"x": x_coord,
-    								"y": y_coord,
-    								"spatialReference": {
-    								"wkid": input_coord_system,
-    								}},	
-    					"outSR": output_coord_system,
-    					"distance": distance, 
+        json_params = { "location": { 
+                                    "x": x_coord,
+                                    "y": y_coord,
+                                    "spatialReference": {
+                                    "wkid": input_coord_system,
+                                    }},    
+                        "outSR": output_coord_system,
+                        "distance": distance, 
                         "returnIntersection": return_intersection,
-    					"f" : outputType
-    	}
-    	url_params = urlencode(json_params)
+                        "f" : outputType
+        }
+        url_params = urlencode(json_params)
 
-    	reverse_geocode_url = "https://awsgeo.boston.gov/arcgis/rest/services/Locators/Boston_Composite_Prod/GeocodeServer/reverseGeocode?{}".format(url_params)
+        reverse_geocode_url = "https://awsgeo.boston.gov/arcgis/rest/services/Locators/Boston_Composite_Prod/GeocodeServer/reverseGeocode?{}".format(url_params)
         #make request to Reverse geocode service
-    	with urlopen(reverse_geocode_url) as url:
+        with urlopen(reverse_geocode_url) as url:
             data = url.read().decode("utf-8")
             coordinate_results = loads(data)
         
@@ -130,8 +125,8 @@ class CobArcGISReverseGeocoder(object):
          'location.spatialReference.wkid' : 'output_coord_system',
          'location.spatialReference.latestWkid' : 'latest_coord_system'}
 
-        multi_land_use_viol_df.rename(columns={'parcel_id_x' : 'parcel_id'}, inplace=True)
 
+        #empty JSON is false
         if not coordinate_results:
 
             if list(coordinate_results.keys())[0] == "error":
@@ -139,6 +134,7 @@ class CobArcGISReverseGeocoder(object):
                 return None
 
             if  len(coordinate_results["address"]) > 0:
+                #creating the dataframe using json_normalize
                 address_df = json_normalize(coordinate_results)
                 address_df.rename(columns=columns_translate_dict, inplace=True)
                 return address_df
