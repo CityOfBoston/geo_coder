@@ -127,10 +127,11 @@ class CobArcGISReverseGeocoder(object):
 
 
         #empty JSON is false
-        if not coordinate_results:
+        #if not coordinate_results:
+        if len(coordinate_results) > 0:
 
             if list(coordinate_results.keys())[0] == "error":
-                print("Unable to geocode from lat/long.  Error Message: {}".format(address_results["error"]["details"]))
+                print("Unable to geocode from lat/long.  Error Message: {}".format(coordinate_results["error"]["details"]))
                 return None
 
             if  len(coordinate_results["address"]) > 0:
