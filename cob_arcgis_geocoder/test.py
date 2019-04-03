@@ -152,18 +152,18 @@ class TestReverseGeocoderHandlesDifferentInputCoordsCorrectly(unittest.TestCase)
         self.reverse_geocoder = CobArcGISReverseGeocoder(self.df, self.x, 
             self.y, self.input_coord_system,
             self.output_coord_system, self.return_intersection)
-        api_results = self.reverse_geocoder._reverse_geocode(
+        self.api_results = self.reverse_geocoder._reverse_geocode(
             self.df["x_coord"], self.df["y_coord"], self.input_coord_system)
-        address_df = self.reverse_geocoder._parse_address_results(api_results)
+        self.address_df = self.reverse_geocoder._parse_address_results(api_results)
 
 
     def test_default_output_coord_sys(self):
-        self.assertEqual(address_df['output_coord_system'], 4326)
+        self.assertEqual(self.address_df['output_coord_system'], 4326)
 
     def test_output_coords_with_return_intersection_true(self):
         self.df['return_intersection'] = True
 
-        self.assertEqual(address_df['output_coord_system'], 4326)        
+        self.assertEqual(self.address_df['output_coord_system'], 4326)        
 
 
 class TestReverseGeocoderDifferentInputCoordsWithIntersections(unittest.TestCase):
@@ -179,13 +179,13 @@ class TestReverseGeocoderDifferentInputCoordsWithIntersections(unittest.TestCase
         self.reverse_geocoder = CobArcGISReverseGeocoder(self.df, self.x, 
             self.y, self.input_coord_system,
             self.output_coord_system, self.return_intersection)
-        api_results = self.reverse_geocoder._reverse_geocode(
+        self.api_results = self.reverse_geocoder._reverse_geocode(
             self.df["x_coord"], self.df["y_coord"], self.input_coord_system)
-        address_df = self.reverse_geocoder._parse_address_results(api_results)
+        self.address_df = self.reverse_geocoder._parse_address_results(api_results)
 
 
     def test_default_output_coord_sys(self):
-        self.assertEqual(address_df['output_coord_system'], 4326)
+        self.assertEqual(self.address_df['output_coord_system'], 4326)
 
 
 class TestReverseGeocoderDifferentInputandOutputCoordinateSystems(unittest.TestCase):
@@ -201,13 +201,13 @@ class TestReverseGeocoderDifferentInputandOutputCoordinateSystems(unittest.TestC
         self.reverse_geocoder = CobArcGISReverseGeocoder(self.df, self.x, 
             self.y, self.input_coord_system,
             self.output_coord_system, self.return_intersection)
-        api_results = self.reverse_geocoder._reverse_geocode(
+        self.api_results = self.reverse_geocoder._reverse_geocode(
             self.df["x_coord"], self.df["y_coord"], self.input_coord_system)
-        address_df = self.reverse_geocoder._parse_address_results(api_results)
+        self.address_df = self.reverse_geocoder._parse_address_results(api_results)
 
 
     def test_different_output_coord_sys(self):
-        self.assertEqual(address_df['output_coord_system'], 2249)
+        self.assertEqual(self.address_df['output_coord_system'], 2249)
 
 
 class TestReverseGeocoderAddressOutput(unittest.TestCase):
