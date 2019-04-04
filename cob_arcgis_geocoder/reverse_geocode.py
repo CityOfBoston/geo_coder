@@ -1,5 +1,6 @@
 import os
 import sys
+import pandas as pd
 from json import loads
 from urllib.parse import urlencode
 from urllib.request import urlopen
@@ -28,12 +29,12 @@ class CobArcGISReverseGeocoder(object):
 
             #If either of the coordinates do not exist, set a message to the Address field that is unable to find an address.
             #If both coordinates are present, reverse geocode those coordinates and set them to the dataframe object. 
-            if row[self.x_field] is None or row[self.y_field] is None:
+            if row[self.x] is None or row[self.y] is None:
                 df.at[index, 'Address'] = "Insufficient coordinates given.  Unable to find an address."
             else:
                 #fetch the results from the API
                 apicall_results = self._reverse_geocode(row[self.x], row[self.y], row[self.input_coord_system],
-                 row[self.output_coord_system_field], row[self.return_intersection])
+                 row[self.output_coord_system], row[self.return_intersection])
                 #clean those results up, clean columns up
                 address_df = self._parse_address_results(apicall_results)
 
@@ -131,7 +132,7 @@ class CobArcGISReverseGeocoder(object):
         if len(coordinate_results) > 0:
 
             if list(coordinate_results.keys())[0] == "error":
-                print("Unable to geocode from lat/long.  Error Message: {}".format(coordinate_results["error"]["details"]))
+                print("Unable to geocode from lat/long.  Error Message: {}".format(coordinate_results["error"]))
                 return None
 
             if  len(coordinate_results["address"]) > 0:
