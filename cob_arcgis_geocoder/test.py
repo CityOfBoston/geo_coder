@@ -23,7 +23,8 @@ class TestAbleToFindAddressCandidates(unittest.TestCase):
         self.candidates = self.geocoder._find_address_candidates(self.address_to_geocode)
 
     def test_parameters_are_as_expected(self):
-        self.assertEqual(len(self.candidates["candidates"]), 6)
+        print(self.candidates)
+        self.assertGreaterEqual(len(self.candidates["candidates"]), 6)
 
 # Picking Address Candidate Tests
 # test able to return correct PointAddress when available
@@ -70,7 +71,7 @@ class TestReverseGeocodeFindsPoint(unittest.TestCase):
         self.assertEqual(self.picked_candidate["attributes.Ref_ID"], 11864)
     
     def test_returns_correct_flag_point_addresses(self):
-        self.assertEqual(self.picked_candidate["flag"], "Able to reverse-geocode to a point address.")
+        self.assertEqual(self.picked_candidate["flag"], "Able to geocode to a non-SAM address.")
 
 # Geocoding Logic Tests
 class TestAbleToHandleNullAddresses(unittest.TestCase):
@@ -139,36 +140,9 @@ class TestInitiatingReverseGeocoderClass(unittest.TestCase):
         self.assertIsInstance(self.reverse_geocoder, CobArcGISReverseGeocoder)
 
 
-class TestReverseGeocoderHandlesDifferentInputCoordsCorrectly(unittest.TestCase):
+class TestReverseGeocoderDifferentInputCoords(unittest.TestCase):
     def setUp(self):
-        self.df = pd.DataFrame({"id" : [1],"x_coord": [20757534.681129166],
-         "y_coord" :[2959300.669159480],'input_coord_system' : [2249],
-         'output_coord_system' : [4326], 'return_intersection' : [False]})
-        self.x = "x_coord"
-        self.y = "y_coord"
-        self.input_coord_system = "input_coord_system"
-        self.output_coord_system = "output_coord_system"
-        self.return_intersection = "return_intersection"
-        self.reverse_geocoder = CobArcGISReverseGeocoder(self.df, self.x, 
-            self.y, self.input_coord_system,
-            self.output_coord_system, self.return_intersection)
-        self.api_results = self.reverse_geocoder._reverse_geocode(
-            self.df["x_coord"], self.df["y_coord"], self.input_coord_system)
-        self.address_df = self.reverse_geocoder._parse_address_results(api_results)
-
-
-    def test_default_output_coord_sys(self):
-        self.assertEqual(self.address_df['output_coord_system'], 4326)
-
-    def test_output_coords_with_return_intersection_true(self):
-        self.df['return_intersection'] = True
-
-        self.assertEqual(self.address_df['output_coord_system'], 4326)        
-
-
-class TestReverseGeocoderDifferentInputCoordsWithIntersections(unittest.TestCase):
-    def setUp(self):
-        self.df = pd.DataFrame({"id" : [1],"x_coord": [20757534.681129166],
+        self.df = pd.DataFrame({"id" : [1],"x_coord": [776969.460426],
          "y_coord" :[2959300.669159480],'input_coord_system' : [2249],
          'output_coord_system' : [4326], 'return_intersection' : [True]})
         self.x = "x_coord"
@@ -176,81 +150,124 @@ class TestReverseGeocoderDifferentInputCoordsWithIntersections(unittest.TestCase
         self.input_coord_system = "input_coord_system"
         self.output_coord_system = "output_coord_system"
         self.return_intersection = "return_intersection"
-        self.reverse_geocoder = CobArcGISReverseGeocoder(self.df, self.x, 
-            self.y, self.input_coord_system,
-            self.output_coord_system, self.return_intersection)
+        self.x_value = self.df["x_coord"][0]
+        self.y_value = self.df["y_coord"][0]
+        self.input_coord_value = self.df['input_coord_system'][0]
+        self.reverse_geocoder = CobArcGISReverseGeocoder(self.df, self.x_value, 
+            self.y_value, self.input_coord_system, self.output_coord_system,
+            self.return_intersection)
         self.api_results = self.reverse_geocoder._reverse_geocode(
-            self.df["x_coord"], self.df["y_coord"], self.input_coord_system)
-        self.address_df = self.reverse_geocoder._parse_address_results(api_results)
-
-
-    def test_default_output_coord_sys(self):
-        self.assertEqual(self.address_df['output_coord_system'], 4326)
-
-
-class TestReverseGeocoderDifferentInputandOutputCoordinateSystems(unittest.TestCase):
-    def setUp(self):
-        self.df = pd.DataFrame({"id" : [1],"x_coord": [20757534.681129166],
-         "y_coord" :[2959300.669159480],'input_coord_system' : [2249],
-         'output_coord_system' : [2249], 'return_intersection' : [True]})
-        self.x = "x_coord"
-        self.y = "y_coord"
-        self.input_coord_system = "input_coord_system"
-        self.output_coord_system = "output_coord_system"
-        self.return_intersection = "return_intersection"
-        self.reverse_geocoder = CobArcGISReverseGeocoder(self.df, self.x, 
-            self.y, self.input_coord_system,
-            self.output_coord_system, self.return_intersection)
-        self.api_results = self.reverse_geocoder._reverse_geocode(
-            self.df["x_coord"], self.df["y_coord"], self.input_coord_system)
-        self.address_df = self.reverse_geocoder._parse_address_results(api_results)
-
-
-    def test_different_output_coord_sys(self):
-        self.assertEqual(self.address_df['output_coord_system'], 2249)
-
-
-class TestReverseGeocoderAddressOutput(unittest.TestCase):
-    def setUp(self):
-        self.df = pd.DataFrame({"id" : [1],"x_coord": [20757534.681129166],
-         "y_coord" :[2959300.669159480],'input_coord_system' : [2249],
-         'output_coord_system' : [2249], 'return_intersection' : [True]})
-        self.x = "x_coord"
-        self.y = "y_coord"
-        self.input_coord_system = "input_coord_system"
-        self.output_coord_system = "output_coord_system"
-        self.return_intersection = "return_intersection"
-        self.reverse_geocoder = CobArcGISReverseGeocoder(self.df, self.x, 
-         self.y, self.input_coord_system, self.output_coord_system,
-         self.return_intersection)
-        self.api_results = self.reverse_geocoder._reverse_geocode(self.df["x_coord"],
-         self.df["y_coord"], self.input_coord_system)
+            self.x_value, self.y_value, self.input_coord_value)
         self.address_df = self.reverse_geocoder._parse_address_results(self.api_results)
 
 
-    def test_different_output_coord_sys(self):
-        self.assertEqual(self.address_df['output_coord_system'], 2249)
+    def test_api_results_not_null(self):
+        self.assertTrue(self.api_results)
+
+    def test_geocoder_df_not_null(self):
+        self.assertFalse(self.address_df.empty)
+
+    def test_address_output_from_MA_State_coord(self):
+        print(self.address_df.columns)
+        print(self.address_df['Match_addr'])
+        self.assertEqual(self.address_df['Match_addr'][0], '427 Commercial St, Boston, 136259, 02109')
 
 
+    def test_default_output_coord_sys(self):
+        self.assertEqual(self.address_df['output_coord_system'][0], 4326)
 
 
-# class TestAbleToFindAddressCandidates(unittest.TestCase):
-#     def setUp(self):
-#         self.df = pd.DataFrame({"id": [1], "address": ["89 Orleans Street Boston MA, 02128"]})
-#         self.address_to_geocode = self.df["address"][0]
-#         self.geocoder = CobArcGISGeocoder(self.df, self.address_to_geocode)
-#         self.candidates = self.geocoder._find_address_candidates(self.address_to_geocode)
+class TestReverseGeocoderwithMAStatePlainCoords(unittest.TestCase):
+    def setUp(self):
+        self.df = pd.DataFrame({"id" : [1],"x_coord": [776969.460426],
+         "y_coord" :[2959300.669159480],'input_coord_system' : [2249],
+         'output_coord_system' : [4326], 'return_intersection' : [True]})
+        self.x = "x_coord"
+        self.y = "y_coord"
+        self.input_coord_system = "input_coord_system"
+        self.output_coord_system = "output_coord_system"
+        self.return_intersection = "return_intersection"
+        self.x_value = self.df["x_coord"][0]
+        self.y_value = self.df["y_coord"][0]
+        self.input_coord_value = self.df['input_coord_system'][0]
+        self.reverse_geocoder = CobArcGISReverseGeocoder(self.df, self.x_value, 
+            self.y_value, self.input_coord_system, self.output_coord_system,
+            self.return_intersection)
+        self.api_results = self.reverse_geocoder._reverse_geocode(
+            self.x_value, self.y_value, self.input_coord_value)
+        self.address_df = self.reverse_geocoder._parse_address_results(self.api_results)
 
-#     def test_parameters_are_as_expected(self):
-#         self.assertEqual(len(self.candidates["candidates"]), 6)
+
+    def test_api_results_not_null(self):
+        self.assertTrue(self.api_results)
+
+    def test_geocoder_df_not_null(self):
+        self.assertFalse(self.address_df.empty)
+
+    def test_address_output_from_MA_State_coord(self):
+        print(self.address_df.columns)
+        print(self.address_df['Match_addr'])
+        self.assertEqual(self.address_df['Match_addr'][0], '427 Commercial St, Boston, 136259, 02109')
 
 
-# class TestAbleToFindAddressCandidates(unittest.TestCase):
-#     def setUp(self):
-#         self.df = pd.DataFrame({"id": [1], "address": ["89 Orleans Street Boston MA, 02128"]})
-#         self.address_to_geocode = self.df["address"][0]
-#         self.geocoder = CobArcGISGeocoder(self.df, self.address_to_geocode)
-#         self.candidates = self.geocoder._find_address_candidates(self.address_to_geocode)
+    def test_default_output_coord_sys(self):
+        self.assertEqual(self.address_df['output_coord_system'][0], 4326)
 
-#     def test_parameters_are_as_expected(self):
-#         self.assertEqual(len(self.candidates["candidates"]), 6)
+
+class TestIncorrectParams(unittest.TestCase):
+    def setUp(self):
+        self.df = pd.DataFrame({"id" : [1],"x_coord": [20757534.681129166],
+         "y_coord" :[2959300.669159480],'input_coord_system' : [2249],
+         'output_coord_system' : [2249], 'return_intersection' : [True]})
+        self.x = "x_coord"
+        self.y = "y_coord"
+        self.input_coord_system = "input_coord_system"
+        self.output_coord_system = "output_coord_system"
+        self.return_intersection = "return_intersection"
+        self.reverse_geocoder = CobArcGISReverseGeocoder(self.df, self.x, 
+            self.y, self.input_coord_system,
+            self.output_coord_system, self.return_intersection)
+        self.api_results = self.reverse_geocoder._reverse_geocode(
+            self.df["x_coord"][0], self.df["y_coord"][0], self.input_coord_system)
+        self.address_df = self.reverse_geocoder._parse_address_results(self.api_results)
+
+
+    def get_an_actual_error_message(self):
+        self.asssertTrue(self.api_results)
+
+    def test_address_results_df_not_null(self):
+        self.assertTrue(self.address_df is None)
+
+    def test_error_message(self):
+        print(self.api_results)
+        self.code = self.api_results.get('error')['code']
+        self.assertEqual(self.code, 400)
+
+
+class TestReverseGeocoderwithMAStatePlainCoordsasInputandOutput(unittest.TestCase):
+    def setUp(self):
+        self.df = pd.DataFrame({"id" : [1],"x_coord": [776969.460426],
+         "y_coord" :[2959300.669159480],'input_coord_system' : [2249],
+         'output_coord_system' : [2249], 'return_intersection' : [True]})
+        self.x = "x_coord"
+        self.y = "y_coord"
+        self.input_coord_system = "input_coord_system"
+        self.output_coord_system = "output_coord_system"
+        self.return_intersection = "return_intersection"
+        self.x_value = self.df["x_coord"][0]
+        self.y_value = self.df["y_coord"][0]
+        self.input_coord_value = self.df['input_coord_system'][0]
+        self.output_coord_system = self.df['output_coord_system'][0]
+        self.reverse_geocoder = CobArcGISReverseGeocoder(self.df, self.x_value, 
+            self.y_value, self.input_coord_system, self.output_coord_system,
+            self.return_intersection)
+        self.api_results = self.reverse_geocoder._reverse_geocode(
+            self.x_value, self.y_value, self.input_coord_value, self.output_coord_system)
+        self.address_df = self.reverse_geocoder._parse_address_results(self.api_results)
+
+
+    def test_default_output_coord_sys(self):
+        print(self.api_results)
+        self.assertEqual(self.address_df['latest_coord_system'][0], 2249)
+
+
