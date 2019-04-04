@@ -269,5 +269,4 @@ class TestReverseGeocoderwithMAStatePlainCoordsasInputandOutput(unittest.TestCas
     def test_default_output_coord_sys(self):
         print(self.api_results)
         self.assertEqual(self.address_df['latest_coord_system'][0], 2249)
-
-
+        
