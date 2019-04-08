@@ -97,13 +97,13 @@ class TestAbleToFindPointAddress(unittest.TestCase):
 
 class TestAbleToReverseGeocodeToPointAddress(unittest.TestCase):
     def setUp(self):
-        self.df = pd.DataFrame({"id": [1], "address": ["890 Commonwealth Avenue"]})
+        self.df = pd.DataFrame({"id": [1], "address": ["100 Legends Way"]})
         self.address = "address"
         self.geocoder = CobArcGISGeocoder(self.df, self.address)
         self.geocode_df = self.geocoder.geocode_df()
 
     def test_reverse_geocode_to_point_address(self):
-        self.assertEqual(self.geocode_df["SAM_ID"][0], 11864)
+        self.assertEqual(self.geocode_df["SAM_ID"][0], 340814)
 
 class TestHandlesNotFindingAddressAsExpected(unittest.TestCase):
     def setUp(self):
@@ -214,10 +214,10 @@ class TestReverseGeocoderwithMAStatePlainCoords(unittest.TestCase):
         self.assertEqual(self.address_df['output_coord_system'][0], 4326)
 
 
-class TestIncorrectParams(unittest.TestCase):
+class TestWorcesterMACoordinates(unittest.TestCase):
     def setUp(self):
-        self.df = pd.DataFrame({"id" : [1],"x_coord": [20757534.681129166],
-         "y_coord" :[2959300.669159480],'input_coord_system' : [2249],
+        self.df = pd.DataFrame({"id" : [1],"x_coord": [-71.8023],
+         "y_coord" :[42.2626],'input_coord_system' : [4326],
          'output_coord_system' : [2249], 'return_intersection' : [True]})
         self.x = "x_coord"
         self.y = "y_coord"
@@ -235,7 +235,7 @@ class TestIncorrectParams(unittest.TestCase):
     def get_an_actual_error_message(self):
         self.asssertTrue(self.api_results)
 
-    def test_address_results_df_not_null(self):
+    def test_address_results_df_null(self):
         self.assertTrue(self.address_df is None)
 
     def test_error_message(self):
@@ -269,4 +269,3 @@ class TestReverseGeocoderwithMAStatePlainCoordsasInputandOutput(unittest.TestCas
     def test_default_output_coord_sys(self):
         print(self.api_results)
         self.assertEqual(self.address_df['latest_coord_system'][0], 2249)
-        
