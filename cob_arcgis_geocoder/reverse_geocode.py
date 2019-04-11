@@ -20,15 +20,19 @@ class CobArcGISReverseGeocoder(object):
 
 
     def reverse_geocode_df(self):
+        """
+        Primary Class Method
 
+        Returns a Dataframe copied to an existing dataframe, given that class is initialized with proper parameters
 
-        #geocoded address columns
+        """
         df = pd.concat([self.df,pd.DataFrame(columns=['Street', 'City', 'Zip', 'Address', 'matched_x_coord', 'matched_y_coord', 'output_coord_system', 'locator_name'])])
 
         for index, row in df.iterrows():
-
-            #If either of the coordinates do not exist, set a message to the Address field that is unable to find an address.
-            #If both coordinates are present, reverse geocode those coordinates and set them to the dataframe object. 
+            """
+            If either of the coordinates do not exist, set a message to the Address field that is unable to find an address.
+            If both coordinates are present, reverse geocode those coordinates and set them to the dataframe object. 
+            """
             if row[self.x] is None or row[self.y] is None:
                 df.at[index, 'Address'] = "Insufficient coordinates given.  Unable to find an address."
             else:
@@ -64,21 +68,18 @@ class CobArcGISReverseGeocoder(object):
     #input the coordinate system, defaulted
     def _reverse_geocode(self, x_coord, y_coord, input_coord_system="4326", output_coord_system="4326", return_intersection=False, distance=100, outputType="pjson"):
         """
-        Returns a JSON object of the closest address that is closest to the point given and the 
+        Params: 
 
-        Args: 
-        x (float): the x value in a coordinate pair to be reverse geocoded.
-        y (float): the y value in a coordinate pair to be reverse geocoded.
-        input_coord_system (str, optional): the spatial reference coordinate system that will be queried.
-        Defaults to WGS84 coordinate system.
-        output_coord_system (str, optional): spatial reference coordinate for which the returned address will be returned with.
-        Defaults to WGS84 coordinate system.
-        return_intersection (Boolean, optional): specifies geocoder to return closest intersection. Default is False.
-        See https://developers.arcgis.com/rest/geocode/api-reference/geocoding-reverse-geocode.htm
-        Distance: (Int, optional) - distnace with which the geocoder will search for an address. defaulted to 100 meters.
-        outputType: (str, optional) response format.  Default type is pretty print json.
+            x (float, required): the x value in a coordinate pair to be reverse geocoded.
+            y (float, required): the y value in a coordinate pair to be reverse geocoded.
+            input_coord_system (str, optional): the spatial reference coordinate system that will be queried. Defaults to WGS84 coordinate system.
+            output_coord_system (str, optional): spatial reference coordinate for which the returned address will be returned with. Defaults to WGS84 coordinate system.
+            return_intersection (Boolean, optional): specifies geocoder to return closest intersection. Default is False.
+            Distance: (Int, optional) - distnace with which the geocoder will search for an address. defaulted to 100 meters.
+            outputType: (str, optional) response format.  Default type is pretty print json.
         
         E.G.
+        See https://developers.arcgis.com/rest/geocode/api-reference/geocoding-reverse-geocode.htm
         https://awsgeo.boston.gov/arcgis/rest/services/Locators/Boston_Composite_Prod/GeocodeServer/reverseGeocode?location={"x": -71.053068420958226,"y":42.365768305949707, "spatialReference":{"wkid":4326}}&outSR=4326&distance=100&langCode=&outSR=4326&returnIntersection=false&f=json
         https://awsgeo.boston.gov/arcgis/rest/services/Locators/Boston_Composite_Prod/GeocodeServer/reverseGeocode?location={"x": 776969.460426,"y":2958642.02359, "spatialReference":{"wkid":3249}}&outSR=4326&distance=100&langCode=&outSR=4326&returnIntersection=false&f=json
         102686 - 3249
@@ -112,13 +113,14 @@ class CobArcGISReverseGeocoder(object):
     # does a little bit of cleaning of the JSON from the API call
     def _parse_address_results(self, coordinate_results):
         """
-        Returns a cleaned response from the ArcGIS reversegeocode API.
+        Returns the best known address given from response from the ArcGIS reversegeocode API.
+        NOTE:  these addresses are not necessarily "SAM" address locators, but given from the seg-alternate locator.
 
         Parameters:
-        coordinate_results: (JSON Object): JSON object that gives results of ArcGIS API call
+            coordinate_results: (JSON Object): JSON object that gives results of ArcGIS API call
 
         Returns:
-        cleaned_df: (Pandas Dataframe Object): Pandas dataframe whose columns are cleaned
+            cleaned_df: (Pandas Dataframe Object): Pandas dataframe whose columns are cleaned
   
         """
         columns_translate_dict = {'address.City' : 'City', 'address.Street' : 'Street', 'address.Match_addr' : 'Match_addr',
